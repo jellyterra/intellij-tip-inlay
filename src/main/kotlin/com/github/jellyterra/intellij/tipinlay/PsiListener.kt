@@ -28,7 +28,7 @@ class PsiListener : PsiTreeChangeAdapter() {
 
     private fun process(event: PsiTreeChangeEvent) {
         ApplicationManager.getApplication().invokeLater {
-            TipInlay((event.file ?: return@invokeLater).project).process()
+            applyTipInlay((event.file ?: return@invokeLater).project)
         }
     }
 

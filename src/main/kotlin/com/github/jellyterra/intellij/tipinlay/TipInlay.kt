@@ -26,15 +26,15 @@ import com.intellij.openapi.project.Project
 import java.awt.Color
 import javax.swing.Icon
 
-class TipInlay(private val project: Project) {
+fun applyTipInlay(project: Project) {
 
-    private val editor = FileEditorManager.getInstance(project).selectedTextEditor!!
+    val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return
 
-    private fun lineOf(offset: Int) = editor.document.getLineNumber(offset)
-    private fun startOf(lineNum: Int) = editor.document.getLineStartOffset(lineNum)
-    private fun endOf(lineNum: Int) = editor.document.getLineEndOffset(lineNum)
+    fun lineOf(offset: Int) = editor.document.getLineNumber(offset)
+    fun startOf(lineNum: Int) = editor.document.getLineStartOffset(lineNum)
+    fun endOf(lineNum: Int) = editor.document.getLineEndOffset(lineNum)
 
-    private fun clearAll() {
+    fun clearAll() {
         for (h in editor.markupModel.allHighlighters) {
             if (h.gutterIconRenderer is TipGutterRenderer) {
                 h.dispose()
@@ -51,22 +51,16 @@ class TipInlay(private val project: Project) {
         }
     }
 
-    private fun addTip(line: Int, text: String, color: Color, icon: Icon) {
-        try {
-            if (editor.document.lineCount - 1 < line) return
+    fun addTip(line: Int, text: String, color: Color, icon: Icon) {
+        editor.markupModel.addRangeHighlighter(
+            startOf(line),
+            endOf(line),
+            0,
+            TextAttributes(editor.colorsScheme.defaultForeground, color, null, null, EditorFontType.PLAIN.ordinal),
+            HighlighterTargetArea.LINES_IN_RANGE
+        ).gutterIconRenderer = TipGutterRenderer(text, icon)
 
-            editor.markupModel.addRangeHighlighter(
-                startOf(line),
-                endOf(line),
-                0,
-                TextAttributes(editor.colorsScheme.defaultForeground, color, null, null, EditorFontType.PLAIN.ordinal),
-                HighlighterTargetArea.LINES_IN_RANGE
-            ).gutterIconRenderer = TipGutterRenderer(text, icon)
-
-            editor.inlayModel.addAfterLineEndElement(endOf(line), true, TipInlayRenderer(text, color))
-        } catch (_: IndexOutOfBoundsException) {
-            // Ignore.
-        }
+        editor.inlayModel.addAfterLineEndElement(endOf(line), true, TipInlayRenderer(text, color))
     }
 
     fun process() {
@@ -93,5 +87,11 @@ class TipInlay(private val project: Project) {
 
             addTip(lineOf(h.startOffset), h.description, color, icon)
         }
+    }
+
+    try {
+        process()
+    } catch (_: IndexOutOfBoundsException) {
+        // Ignore.
     }
 }

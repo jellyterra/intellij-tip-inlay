@@ -26,7 +26,7 @@ class ProblemsListener : ProblemsListener {
 
     private fun process(problem: Problem) {
         ApplicationManager.getApplication().invokeLater {
-            TipInlay(problem.provider.project).process()
+            applyTipInlay(problem.provider.project)
         }
     }
 }

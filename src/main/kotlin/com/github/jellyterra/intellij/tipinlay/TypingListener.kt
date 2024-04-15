@@ -27,7 +27,7 @@ class TypingListener : TypedHandlerDelegate() {
     override fun charTyped(c: Char, project: Project, editor: Editor, file: PsiFile): Result {
         val now = java.time.Instant.now().epochSecond
         if (lastTime + 1000 < now) {
-            ApplicationManager.getApplication().invokeLater { TipInlay(project).process() }
+            ApplicationManager.getApplication().invokeLater { applyTipInlay(project) }
             lastTime = now
         }
 
