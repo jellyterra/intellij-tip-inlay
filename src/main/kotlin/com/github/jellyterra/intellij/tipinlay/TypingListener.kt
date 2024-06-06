@@ -18,18 +18,23 @@ import com.intellij.codeInsight.editorActions.TypedHandlerDelegate
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectManager
 import com.intellij.psi.PsiFile
-
-private var lastTime = java.time.Instant.now().epochSecond
 
 class TypingListener : TypedHandlerDelegate() {
 
-    override fun charTyped(c: Char, project: Project, editor: Editor, file: PsiFile): Result {
-        val now = java.time.Instant.now().epochSecond
-        if (lastTime + 1000 < now) {
-            ApplicationManager.getApplication().invokeLater { applyTipInlay(project) }
-            lastTime = now
+    private var changed = false
+
+    init {
+        ApplicationManager.getApplication().executeOnPooledThread {
+            Thread.sleep(3000)
+            if (!changed) return@executeOnPooledThread
+            for (project in ProjectManager.getInstance().openProjects) applyTipInlay(project)
         }
+    }
+
+    override fun charTyped(c: Char, project: Project, editor: Editor, file: PsiFile): Result {
+        changed = true
 
         return Result.CONTINUE
     }
