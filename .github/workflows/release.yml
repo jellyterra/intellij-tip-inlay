@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build
+        shell: bash
+        run: |
+          mkdir ~/build
+          curl -s "https://get.sdkman.io" | bash
+          . ~/.sdkman/bin/sdkman-init.sh
+          sdk install java 17.0.12-oracle
+          sdk install gradle 8.5
+          gradle build
+          mv build/libs/intellij*jar ~/build/
+          cd ~/build
+          sha256sum *jar > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run:
+          gh release -R ${{ github.repository }} create ${{ github.ref_name }} -t ${{ github.ref_name }} ~/build/SHA256SUMS.txt ~/build/*jar
